@@ -1,10 +1,12 @@
 class External::Hotels
   class Error < StandardError; end
 
+  EXPIRATION = 2.minutes.freeze
+
   def self.search(params)
     cache_key = build_cache_key(params)
     
-    Rails.cache.fetch(cache_key, expires_in: 30.minutes) do
+    Rails.cache.fetch(cache_key, expires_in: EXPIRATION) do
       client = External::Client.new
       results = client.get('/listings', params)
       results["listings"]
@@ -16,9 +18,8 @@ class External::Hotels
   private
 
   def self.build_cache_key(params)
-    normalized_params = normalize_params(params)
-    "v1:search:#{normalized_params[:qd]}:" \
-    "#{normalized_params[:check_in]}:#{normalized_params[:check_out]}:" \
-    "a#{normalized_params[:quests][:adults]}:c#{normalized_params[:quests][:children]}"
+    "v1:search:#{params[:location_id]}:" \
+    "#{params[:check_in]}:#{params[:check_out]}:" \
+    "adults_#{params[:adults]}:children_#{params[:children]}"
   end
 end

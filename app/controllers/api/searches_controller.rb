@@ -3,11 +3,11 @@ class Api::SearchesController < ApplicationController
 
   def index
     search_params = {
-      city: params[:location_id],
+      location_id: params[:location_id],
       check_in: params[:check_in],
       check_out: params[:check_out],
-      adults: params[:quests][:adults].to_i,
-      children: params[:quests][:children].to_i
+      adults: params[:adults].to_i,
+      children: params[:children].to_i
     }
 
     results = External::Hotels.search(search_params)
@@ -21,11 +21,12 @@ class Api::SearchesController < ApplicationController
   def validate_search_params
     errors = []
 
-    %i[location_id check_in check_out guests].each do |param|
+    %i[location_id check_in check_out adults children].each do |param|
       errors << "#{param} is required" if params[param].blank?
     end
 
-    errors << 'adults must be at least 1' if params.dig(:quests, :adults).to_i < 1
+    errors << 'adults must be at least 1' if params[:adults].to_i < 1
+    errors << 'location_id must be Integer' if params[:location_id].to_s.to_i < 1
 
     # Validate dates
     if params[:check_in].present? && params[:check_out].present?

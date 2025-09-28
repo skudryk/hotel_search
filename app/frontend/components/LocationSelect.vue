@@ -51,7 +51,7 @@ export default {
     // Debounced search function
     const debouncedFetch = debounce((query) => {
       emit('fetchLocations', query)
-    }, 300)
+    }, 1000)
 
     const handleInput = () => {
       emit('update:location', inputValue.value)

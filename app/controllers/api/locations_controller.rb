@@ -3,7 +3,7 @@ class Api::LocationsController < ApplicationController
 
   def index
     locations = External::Locations.search(params[:q])
-    render json: locations
+    render json: locations.map {|loc| {id: loc['id'], name: loc['title'] }}
   rescue External::Locations::Error => e
     render json: { error: { code: 'LOCATIONS_ERROR', message: e.message } }, status: :bad_gateway
   end
