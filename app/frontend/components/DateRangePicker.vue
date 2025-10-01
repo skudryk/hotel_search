@@ -72,9 +72,14 @@ export default {
         try {
           const checkInDate = parseISO(checkInValue.value)
           const checkOutDate = parseISO(checkOutValue.value)
+          console.log("checkInDate:", checkInDate, "checkOutDate:", checkOutDate)
           
+
           if (checkOutDate <= checkInDate) {
-            checkOutValue.value = ''
+            console.error('clearing checkOutValue');
+            // TODO:  add extra checks if entered values for D/M/Y are valid and only then clear value
+            // if the checkOut is invalid (after CheckIn or wrong date at all)
+            //checkOutValue.value = ''
           }
         } catch (error) {
           console.warn('Date parsing error:', error)
@@ -167,4 +172,5 @@ label {
   }
 }
 </style>
+
 

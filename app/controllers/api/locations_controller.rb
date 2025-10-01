@@ -2,9 +2,10 @@ class Api::LocationsController < ApplicationController
   before_action :validate_query_param
 
   def index
-    locations = External::Locations.search(params[:q])
+    page = params[:page] || 1
+    locations = BoomNow::Locations.search(params[:q], page:)
     render json: locations.map {|loc| {id: loc['id'], name: loc['title'] }}
-  rescue External::Locations::Error => e
+  rescue BoomNow::Locations::Error => e
     render json: { error: { code: 'LOCATIONS_ERROR', message: e.message } }, status: :bad_gateway
   end
 

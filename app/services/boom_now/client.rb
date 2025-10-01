@@ -1,4 +1,6 @@
-class External::Client
+class BoomNow::Client
+  include Singleton
+
   class Error < StandardError; end
   class TimeoutError < Error; end
   class AuthenticationError < Error; end
@@ -12,7 +14,7 @@ class External::Client
   end
 
   def get(path, params = {})
-    url = "#{ExternalApi::BASE_URL}#{path}"
+    url = "#{BoomNowApi::BASE_URL}#{path}"
     Rails.logger.debug "-- GET API request to #{url}, using params: #{params}"
 
     response = connection.get(url, params)
@@ -24,7 +26,7 @@ class External::Client
   end
 
   def post(path, params = {})
-    url = "#{ExternalApi::BASE_URL}#{path}"
+    url = "#{BoomNowApi::BASE_URL}#{path}"
     Rails.logger.debug "-- POST API request to #{url}, using params: #{params}"
     response = connection.post(url, params.to_json)
     handle_response(response)
@@ -38,20 +40,24 @@ private
 
   def connection
       @connection ||=
-        Faraday.new(url: ExternalApi::BASE_URL,  headers: ) do |conn|
+        Faraday.new(url: BoomNowApi::BASE_URL,  headers: ) do |conn|
           conn.request :json
           conn.response :json
           conn.adapter Faraday.default_adapter
+          conn.options.timeout = 60 #seconds
         end
   end
 
   def token(refresh: false)
-    @token && !refresh ? @token :  fetch_auth_token
+    cache_key = "boom_api_client_access_token"
+    access_token = Rails.cache.fetch(cache_key, expires_in: 1.month) { fetch_auth_token }
+    
+    @token && !refresh ? access_token  : fetch_auth_token
   end
 
   def fetch_auth_token
-    @skip_auth_header = true
-    payload = {client_id: ExternalApi::CLIENT_ID, client_secret: ExternalApi::CLIENT_SECRET}
+    @skip_auth_header = true # flag used to share the headers for different requests
+    payload = {client_id: ::BoomNowApi::CLIENT_ID, client_secret: ::BoomNowApi::CLIENT_SECRET}
     body = post('/auth/token', payload)
     @skip_auth_header = false
     @connection = nil # reset to refresh headers
@@ -92,5 +98,6 @@ private
     "Bearer #{@token}"
   end
 end
+
 
 
